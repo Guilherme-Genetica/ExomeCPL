@@ -136,3 +136,4 @@ $ java -jar GenomeAnalysisTK.jar \
 # Onde: --stand_emi_conf, determina o limiar de confiança das emissões. Esse é o limite mínimo de confiança (com escala em phred) no qual o programa deve emitir sites que parecem ser possivelmente variantes.
 # Onde: --stand_call_conf, determina o limiar de confiança das chamadas. Também em Phred, em que o programa emite sitios variantes conforme chamado. Se o genótipo associado de um sitio tiver uma pontuação de confiança menor que o limiar da chamada, o programa emitirá o site como filtrado e o anotará como LowQual. Esse limite separa as chamadas de alta confiança das chamadas de baixa confiança.
 
+# Aqui terminamos o protocolo 1 e 2. No arquivo VariantSeq daremos continuação ao processo.
