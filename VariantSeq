@@ -1,0 +1,6 @@
+# Orietnações gerais:
+# Dados iniciais a analizar (FASTQ) = raw_reads.fq
+# Genoma humano de referência (FASTA) = reference.fa
+# Banco de dados com variantes (VCF) = dbsnp137.vcf
+# Dados realinhados e recalibrados (BAM) = recal_reads.bam
+# Dados realinhados, recalibrados e comprimidos (BAM) = reduced_reads.bam
