@@ -1,0 +1,18 @@
+# Orietnações gerais
+# Dados iniciais a analizar (FASTQ) = raw_reads.fq
+# Genoma humano de referência (FASTA) = reference.fa
+# Banco de dados com variantes (VCF) = dbsnp137.vcf
+
+# 1- Gerando o índice BWA
+$ bwa index reference.fa
+
+# 2- Gerando o arquivo índice FASTA
+$ samtools faidx reference.fa
+
+# 3- Gerando o dicionário da sequencia = reference.dict - cria um arquivo formatado como um cabeçalho do SAM mas para o genoma de referência
+$ java -jar CreateSequenceDictionary.jar \
+    REFERENCE=reference.fa \
+    OUTPUT=reference.dict
+# Preparando as informações apropriadas do grupo de leitura.
+
+    
