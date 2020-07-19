@@ -1,6 +1,25 @@
 # Orietnações gerais:
+# Arquivos 1.
 # Dados iniciais a analizar (FASTQ) = raw_reads.fq
 # Genoma humano de referência (FASTA) = reference.fa
 # Banco de dados com variantes (VCF) = dbsnp137.vcf
 # Dados realinhados e recalibrados (BAM) = recal_reads.bam
 # Dados realinhados, recalibrados e comprimidos (BAM) = reduced_reads.bam
+
+# Recalibração dos pontos de qualidade das variantes (VQSR). Na primeira etapa ocorre a atribuição da VQSR por machine-learning e na segunda etapa ocorre a filtragem dos conjunto de dados brutos chamados.
+# No final do processo com o HapkotypeCaller ocorre a saída de um .VCF de alta qualidade de variantes chamadas. Confirmando que a variante genética é verdadeira e não um artefato, anotando uma pontuação de qualidade chamado VQSLOD (razão de chances logarítimica --> que representa um treinamento com V+ vs F+)
+# Note que SNPs e indels são classes diferentes de variações que são tratadas separadamente.
+
+# Arquivos 2.
+# Chamada de variantes em VCF será configurada em = raw_variants.vcf
+# Banco de dados com o conjunto de variantes conhecida para o treinamento: 
+  # HapMap 3.3 = hapmap.vcf
+  # Omni 2.5 = omni.vcf
+  # 1000G high-confidence = 1000G.vcf
+  # dbSNP = dbsnp.vcf
+  # Mills e 1000G Gold Standard Indels = mills.vcf
+  
+# 1- Recalibrando pontuação de qualidade das variantes para SNPs
+# Para cada fonte de treinamento é necessário especificar seus atributos (etiquetar os valores-chaves), qualificar se o arquivo contem sítios conhecidos, sítios de trinamento, sítios verdadeiros de variantes e a probabilidade daqueles sítios serem verdadeiros na scala Phred.
+  # Verdadeiros sítios de recursos de treinamento: HapMap - O programa irá ocnsiderar que as variantes neste recurso são representativas de sítios verdadeiros (true=true) e a usarão para treinar o modelo de  recalibração (training=true).Também usaremos esses sites posteriormente para escolher um limite para a filtragem de variantes com base na sensibilidade aos sites verdadeiros. Também usaremos esses sites posteriormente para escolher um limite para a filtragem de variantes com base na sensibilidade aos sites verdadeiros. A probabilidade a priori atribuída a essas variantes é Q15 (96,84%).
+  #
