@@ -4,15 +4,76 @@
 # Banco de dados com variantes (VCF) = dbsnp137.vcf
 
 # 1- Gerando o índice BWA
+
 $ bwa index reference.fa
 
 # 2- Gerando o arquivo índice FASTA
+
 $ samtools faidx reference.fa
 
-# 3- Gerando o dicionário da sequencia = reference.dict - cria um arquivo formatado como um cabeçalho do SAM mas para o genoma de referência
+# 3- Gerando o dicionário da sequencia = reference.dict - cria um arquivo formatado como um cabeçalho do SAM mas para o genoma de referência.
+
 $ java -jar CreateSequenceDictionary.jar \
     REFERENCE=reference.fa \
     OUTPUT=reference.dict
-# Preparando as informações apropriadas do grupo de leitura.
 
-    
+# O output ou -o é sempre o arquivo de saída. O imput ou -I é sempre o de entrada.
+
+# 5- Preparando as informações apropriadas do grupo de leitura (etiquetando o GATK)
+# ex.   @RG\tID:group1\tSM:sample1\tPL:illumina\tLB:lib1\tPU:unit1
+# Onde as informações do grupo de leitura (read group=@RG) é onde se escreve a meta-data (um conjunto de dados que descreve e fornece informações sobre outros dados) da amostra.
+# \t é um caracter de tabulação
+# ID é o identificador da corrida (ex. lane donde o dado foi extraido no Illumina)
+# SM é o nome associado com o DNA na amostra (p.ex NA12878). Toda a análise no GATK é feita tendo por base a amostra, por isso definir este nome é importante.
+# PL é a plataforma que foi usada (lista no manual do GATK, ex. illumina, pacbio, iontorrent...)
+# LB Identifica a biblioteca de qual DNA foi sequenciado, com isso é possivel lincar os dados com os processos do laboratorio e fazer a análise de erros e qualidade.
+# PU Identifica a unidade da plataforma nesta corrida. (ex flowcell-barcode.lane - único identificador para corridas no Illumina.
+# Para maiores informações (http://samtools.sourceforge.net/SAM1.pdf).
+
+# 5- Gerando o arquivo sam SAM
+
+$ bwa mem -R ’<read group info>’ -p reference.fa raw_reads.fq >aligned_reads.sam
+
+# -R define a linha completa do cabeçalho do grupo de leitura.
+# -t define o número de threads (com 4 threads, o mapeamento será executada em 4 processos paralelamente)
+# -p supõe que o primeiro arquivo de consulta de entrada (genoma de referência) esteja intercalado com o FASTA / Q "emparelhada" (paired end). No entanto lembre-se que a referencia.fa pode ser não emparelhada (single end)
+# Para outras opções veja http://bio-bwa.sourceforge.net/bwa.shtml
+
+6 - Convertendo BAM, ordenando e marcando duplicatas usando comando do Picard. Observe que sempre o arquivo Output é o que foi gerado, neste caso nomeamos de dedup devido à dedução de duplicatas geradas no processo de leitura do DNA.
+
+$ java -jar MarkDuplicates.jar \
+    INPUT=aligned_reads.sam \
+    OUTPUT=dedup_reads.bam \
+    SO=coordinate
+
+7 - Fazendo novo alinhamento baseado nos indels importante para alinhar os indels que podem ter sido mapeados com erros. Criando a lista de alvos, intervalos para o alinhamento, usando o GATK.
+
+$ java -jar GenomeAnalysisTK.jar \
+    -T RealignerTargetCreator \
+    -R reference.fa \
+    -I dedup_reads.bam \
+    -L 20 \
+    -known gold_indels.vcf \
+    -o target_intervals.list
+
+# Observe que o output -o cria o um arquivo que é a lista dos intervalos que o programa identifica como necessários para o alinhamento, neste caso o alvo (-L) foi o cromossomo 20. 
+# A lista dos sítios de indels conhecidos (gold_indels) são usados como alvos para o alinhamento. Apenas use-a se houver para o seu organismo.
+
+8 - Rodando o GATK para realinhar:
+
+$ java -jar GenomeAnalysisTK.jar \
+    -T IndelRealigner \
+    -R reference.fa \
+    -I dedup_reads.bam \
+    -targetIntervals target_intervals.list \
+    -known gold_indels.vcf \
+    -o realigned_reads.bam
+
+# o arquivo de saída é o  realigned_reads.bam que contem todos os reads originais mas melhor alinhados. (observe que não foi necessário colocar o -L 20 pois já tinha sido definido quando foi criado o target_intervals.list).
+
+
+
+
+
+
+
