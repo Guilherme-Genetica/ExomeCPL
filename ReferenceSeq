@@ -1,5 +1,5 @@
-# Orietnações gerais:
-# Dados iniciais a analizar (FASTQ) = raw_reads.fq
+# Orientações gerais:
+# Dados iniciais a analisar (FASTQ) = raw_reads.fq
 # Genoma humano de referência (FASTA) = reference.fa
 # Banco de dados com variantes (VCF) = dbsnp137.vcf
 
@@ -17,20 +17,20 @@ $ java -jar CreateSequenceDictionary.jar \
     REFERENCE=reference.fa \
     OUTPUT=reference.dict
 
-# O output ou -o é sempre o arquivo de saída. O imput ou -I é sempre o de entrada.
+# O output ou -o é sempre o arquivo de saída. O input ou -I é sempre o de entrada.
 
 # 5- Preparando as informações apropriadas do grupo de leitura (etiquetando o GATK)
 # ex.   @RG\tID:group1\tSM:sample1\tPL:illumina\tLB:lib1\tPU:unit1
 # Onde as informações do grupo de leitura (read group=@RG) é onde se escreve a meta-data (um conjunto de dados que descreve e fornece informações sobre outros dados) da amostra.
-# \t é um caracter de tabulação
-# ID é o identificador da corrida (ex. lane donde o dado foi extraido no Illumina)
+# \t é um caractere de tabulação
+# ID é o identificador da corrida (ex. lane donde o dado foi extraído no Illumina)
 # SM é o nome associado com o DNA na amostra (p.ex NA12878). Toda a análise no GATK é feita tendo por base a amostra, por isso definir este nome é importante.
 # PL é a plataforma que foi usada (lista no manual do GATK, ex. illumina, pacbio, iontorrent...)
-# LB Identifica a biblioteca de qual DNA foi sequenciado, com isso é possivel lincar os dados com os processos do laboratorio e fazer a análise de erros e qualidade.
+# LB Identifica a biblioteca de qual DNA foi sequenciado, com isso é possível linkar os dados com os processos do laboratório e fazer a análise de erros e qualidade.
 # PU Identifica a unidade da plataforma nesta corrida. (ex flowcell-barcode.lane - único identificador para corridas no Illumina.
 # Para maiores informações (http://samtools.sourceforge.net/SAM1.pdf).
 
-# 5- Gerando o arquivo sam SAM
+# 5- Gerando o arquivo SAM
 
 $ bwa mem -R ’<read group info>’ -p reference.fa raw_reads.fq >aligned_reads.sam
 
@@ -71,7 +71,7 @@ $ java -jar GenomeAnalysisTK.jar \
 
 # O arquivo de saída é o realigned_reads.bam que contem todos os reads originais mas melhor alinhados. Observe que não foi necessário colocar o -L 20 pois já tinha sido definido quando foi criado o target_intervals.list.
 
-# 9- Analizando os padrões de covariação do conjunto de dados sequenciados. A estimativa de erro por base sequnciada é a base para pontuação de qualidade, no entanto, esta estimativa é frequentemente envesada. Desta forma a recalibração serve para produzir um BAM adequado para análise.
+# 9- Analisando os padrões de covariação do conjunto de dados sequenciados. A estimativa de erro por base sequnciada é a base para pontuação de qualidade, no entanto, esta estimativa é frequentemente envesada. Desta forma a recalibração serve para produzir um BAM adequado para análise.
 
 $ java -jar GenomeAnalysisTK.jar \
     -T BaseRecalibrator \
@@ -83,7 +83,7 @@ $ java -jar GenomeAnalysisTK.jar \
     -o recal_data.grp \
     -plots before_recal.pdf
 
-# Este processo cria o GATKReport (relatório) chamado recal_data.grp, que contem tabelas com os dados de covariação que serão usadas para recalibrar a qualidade das bases sequnciadas. Também é gerado um .pdf que mostra a diferença das qualidades calculadas previamente. É necessario pover ao programa a configuração dos conjuntos dos sitios conhecidos (knownSites) neste caso foi usado o .vcf do dbsnp e do gold_indels.
+# Este processo cria o GATKReport (relatório) chamado recal_data.grp, que contem tabelas com os dados de covariação que serão usadas para recalibrar a qualidade das bases sequenciadas. Também é gerado um .pdf que mostra a diferença das qualidades calculadas previamente. É necessário prover ao programa a configuração dos conjuntos dos sítios conhecidos (knownSites) neste caso foi usado o .vcf do dbsnp e do gold_indels.
 
 # 10 - Demonstrando a qualidade das bases após a recalibração. Observe o .pdf plotado. A opção - BQSR permite prever a recalibração baseado na tabela gerada antes.
 
@@ -96,7 +96,7 @@ $ java -jar GenomeAnalysisTK.jar \
     -o post_recal_data.grp \
     -plots after_recal.pdf
 
-# 11 - Aplicando a revcalibração aos dados da sequencia via GATK. O Arquvo recal_reads.bam é gerado com as pontuações de qualidade acuradas para substituição de bases, inserções e deleções. A oção emit_original_quals ao comando PrintReads permite reter a qualidade anterior marcada com OQ no .bam gerado.
+# 11 - Aplicando a recalibração aos dados da sequencia via GATK. O Arquivo recal_reads.bam é gerado com as pontuações de qualidade acuradas para substituição de bases, inserções e deleções. A opção emit_original_quals ao comando PrintReads permite reter a qualidade anterior marcada com OQ no .bam gerado.
 
 
 $ java -jar GenomeAnalysisTK.jar \
@@ -131,8 +131,8 @@ $ java -jar GenomeAnalysisTK.jar \
     -o raw_variants.vcf
     
 # Parâmetros básicos para chamada de variantes.
-# Onde: --genotyping_mode, determina o modo genotipado. Especifica como queremos que  programa determine os alelos alternativos  a serem usados na geotipagem. Por padrão, o modo DISCOVERY escolherá os alelos mais prováveis dentre os que vê nos dados. No modo GENOTYPE_GIVN_ALLELES, o programa somente usará os alelos de dentro de um arquivo .VCF (usando o argumento -alleles), que só é util para determinar se uma amostra tem um genótipo espeífico de interesse.
-# Onde: --output_mode, determina o modo de saída. No modo EMIT_VARIANTS_ONLY padrão, o programa emitirá chamadas apenas para sitios que parecem ser variantes (se com alta ou baixa confiança). No modo EMIT_ALL_CONFIDENT_SITES, o programa emitirá chamadas em sitios nos quais tenha alta confiança se o sitio é variante ou não (ex. se possui a referência do alelo). No modo EMIT_ALL_SITES, o programa emitirá chamadas em qualquer sitio solicitável (por exemplo, sitios em que haja dados utilizáveis) independentemente da confiança. Esse último argumento é destinado apenas a mutações pontuais (SNPs) no modo de genotipagem DISCOVERY ou geralmente quando executado no modo de genotipagem GENOTYPE_GIVEN_ALLELES. Não há garantia de que ele possa produzir um conjunto abrangente de indels no modo DISCOVERY.
+# Onde: --genotyping_mode, determina o modo genotipado. Especifica como queremos que  programa determine os alelos alternativos  a serem usados na geotipagem. Por padrão, o modo DISCOVERY escolherá os alelos mais prováveis dentre os que vê nos dados. No modo GENOTYPE_GIVN_ALLELES, o programa somente usará os alelos de dentro de um arquivo .VCF (usando o argumento -alleles), que só é útil para determinar se uma amostra tem um genótipo espeífico de interesse.
+# Onde: --output_mode, determina o modo de saída. No modo EMIT_VARIANTS_ONLY padrão, o programa emitirá chamadas apenas para sítios que parecem ser variantes (se com alta ou baixa confiança). No modo EMIT_ALL_CONFIDENT_SITES, o programa emitirá chamadas em sitios nos quais tenha alta confiança se o sitio é variante ou não (ex. se possui a referência do alelo). No modo EMIT_ALL_SITES, o programa emitirá chamadas em qualquer sitio solicitável (por exemplo, sitios em que haja dados utilizáveis) independentemente da confiança. Esse último argumento é destinado apenas a mutações pontuais (SNPs) no modo de genotipagem DISCOVERY ou geralmente quando executado no modo de genotipagem GENOTYPE_GIVEN_ALLELES. Não há garantia de que ele possa produzir um conjunto abrangente de indels no modo DISCOVERY.
 # Onde: --stand_emi_conf, determina o limiar de confiança das emissões. Esse é o limite mínimo de confiança (com escala em phred) no qual o programa deve emitir sites que parecem ser possivelmente variantes.
 # Onde: --stand_call_conf, determina o limiar de confiança das chamadas. Também em Phred, em que o programa emite sitios variantes conforme chamado. Se o genótipo associado de um sitio tiver uma pontuação de confiança menor que o limiar da chamada, o programa emitirá o site como filtrado e o anotará como LowQual. Esse limite separa as chamadas de alta confiança das chamadas de baixa confiança.
 
