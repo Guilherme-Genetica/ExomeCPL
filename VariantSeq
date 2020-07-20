@@ -21,5 +21,120 @@
   
 # 1- Recalibrando pontuação de qualidade das variantes para SNPs
 # Para cada fonte de treinamento é necessário especificar seus atributos (etiquetar os valores-chaves), qualificar se o arquivo contem sítios conhecidos, sítios de trinamento, sítios verdadeiros de variantes e a probabilidade daqueles sítios serem verdadeiros na scala Phred.
-  # Verdadeiros sítios de recursos de treinamento: HapMap - O programa irá ocnsiderar que as variantes neste recurso são representativas de sítios verdadeiros (true=true) e a usarão para treinar o modelo de  recalibração (training=true).Também usaremos esses sites posteriormente para escolher um limite para a filtragem de variantes com base na sensibilidade aos sites verdadeiros. Também usaremos esses sites posteriormente para escolher um limite para a filtragem de variantes com base na sensibilidade aos sites verdadeiros. A probabilidade a priori atribuída a essas variantes é Q15 (96,84%).
-  #
+  # Verdadeiros sítios de recursos de treinamento: 
+    # HapMap - Conjunto de SNP de alta confiança. O programa irá ocnsiderar que as variantes neste recurso são representativas de sítios verdadeiros (true=true) e a usarão para treinar o modelo de  recalibração (training=true).Também usaremos esses sites posteriormente para escolher um limite para a filtragem de variantes com base na sensibilidade aos sites verdadeiros. Também usaremos esses sites posteriormente para escolher um limite para a filtragem de variantes com base na sensibilidade aos sites verdadeiros. A verossimilhança a priori atribuída a essas variantes é Q15 (96,84%).
+    # OMNI - Conjunto de SNP polimórfico do 1000 Genomas. Também é true=true e training=true, no entanto a verossimilhança a priori atribuida a essa variantes é Q12 (93.69%).
+   # Sítios não verdadeiros de treinamento dos recursos:
+    # 1000G - Este é um meio (recurso) com sítios de alta confiança de SNP no entanto pode conter falsos positivos (truth=false) e será usado para recalibragem do modelo (training=true) sendo a verossimilhança previa destas variantes igual a Q10
+   # Recursos de sítios conhecido, não usado em treinamento:
+    # O dbSNP - Não é validado para um alto grau de confiança (true=false) e não deve ser usado para o treinamento das variantes (treining=false). No entanto, o programa o usará para stratificar a métrica dos resultados como a razão Ti/Tv, razão sobre a presença ou não de variantes conhecidas no dbsnp (known=true). Sendo a pverossimilhança previa destas variantes igual a Q12 (36.90%).
+
+# 2- Especificar quais anotações o programa deve usar para avaliar a probabilidade das SNPs serem reais. Essas anotações são incluídas nas informações geradas para cada variante chamada. Se uma anotação estiver ausente (porque foi omitida no comando de chamada), ela poderá ser adicionada usando a ferramenta VariantAnnotator (Protocolo de Suporte 4).
+  # DP - Cobertura = Profundiade total de corbertura (não filtrada).
+  # QD - QualByDepth = Confiança da variante (do campo QUAL) / profundidade não filtrada de amostras que não são de referência.
+  # FS - FisherStrand = P-Valor do Phred usando o Teste de Fisher para detectar o viés da fita (a variação sendo vista apenas na fita sentido ou reversa) nas leituras. Quanto maior o viés, maior é o indicativo de chamadas falsas positivas.
+  # MQRankSum - MappingQualityRankSumTest = A aproximação-z baseada em u do Teste de Classificação de Mann-Whitney para mapear qualidades (lê com bases de referência contra aquelas do alelo alternativo). Observe que o teste da soma da classificação da qualidade do mapeamento não pode ser calculado para sites sem uma mistura de leituras mostrando os alelos de referência e alternativos.
+  # ReadPosRankSum - ReadPosRankSumTest = Também baseado em Mann-Whithney para determinar a distância do final da leitura em comparação com as leituras do alelo alternativo. Se o alelo alternativo for visto apenas proximo ao final da leitura, isso é indicativo de erro. Observe que a posição da leitura do teste de soma não pode ser calculado por sitios sem uma mistura de leituras mostrando ambos alelos de referência e alternativos.
+
+# 3- Especificar a valores do limiar de sensibilidade real desejados para que o programa possa usar para gerar parcelas (partes) ou seja, parte das variantes ranqueadas pelo VQSLOD. Quanto mais baixo é a parcela maior é a especificidade mas menor é a sensibilidade, ou seja, poucos falsos positivos mas potencialmente muitos falsos negativos (ex. chamadas que faltam). Assim cada parcela subsequente, por sua vez, introduz chamadas positivas verdadeiras adicionais, juntamente com um número crescente de chamadas falsas positivas. Isso nos permite filtrar variantes com base na sensibilidade que queremos que o conjunto de chamadas seja, em vez de aplicar filtros rijo e avaliar apenas a sensibilidade do conjunto de chamadas usando métodos post hoc.
+  # Limiar da 1a parte = 100.0
+  # Limiar da 2a parte = 99.9
+  # Limiar da 3a parte = 99.0
+  # Limiar da 4a parte = 90.0
+
+# 4- Determinar parâmetros de modelos adicionais:
+  # (-percentBad) percentagem de más variantes = 0.01
+    # Essa é a porcentagem das piores variantes de pontuação a serem usadas ao criar o modelo de variantes ruins. O valor 0,01 significa "pegue inferiores a 1%".
+  # (-minNumBad) Número mínimo de variantes ruins = 1000
+    # Esse é o número mínimo de variantes de pior pontuação a serem usadas ao criar o modelo de variantes ruins. Isso substitui o argumento -percentBad, se necessário, ou seja, se a porcentagem especificada não corresponder a variantes suficientes, conforme especificado aqui.
+
+# 5- Criar o modelo de recalibração SNP executando o seguinte comando GATK:
+ 
+ $java -jar GenomeAnalysisTK.jar \
+	-T VariantRecalibrator \
+	-R reference.fa \
+	-input raw_variants.vcf \
+	-resource:hapmap,known=false,training=true,truth=true,prior=15.0 hapmap.vcf \
+	-resource:omni,known=false,training=true,truth=false,prior=12.0 omni.vcf \
+	-resource:1000G,known=false,training=true,truth=false,prior=10.0 1000G.vcf \
+	-resource:dbsnp,known=true,training=false,truth=false,prior=2.0 dbsnp.vcf \
+	-an DP \
+	-an QD \
+	-an FS \
+	-an MQRankSum \
+	-an ReadPosRankSum \
+	-mode SNP \
+	-tranche [100.0, 99.9, 99.0, 90.0] \
+	-percentBad 0.01 \
+	-minNumBad 1000 \
+	-recalFile recalibrate_SNP.recal \
+	-tranchesFile recalibrate_SNP.tranches \
+	-rscriptFile recalibrate_SNP_plots.R
+  
+  # recalibrate_SNP.recal = é o arquivo mais importante criado, e será usado para criar o .VCF. 
+  # O -tranchesFile contem a saída das pontuações limitrofes de qualidde das parcelas e o -rscriptFile gerará plots em .pdf a partir do R instalado previamente.
+  
+  # 6- Aplicar o nível desejado de recalibração aos SNPs no conjunto de chamadas executando o seguinte comando GATK:
+  
+  $ java -jar GenomeAnalysisTK.jar \
+    -T ApplyRecalibration \
+    -R reference.fa \
+    -input raw_variants.vcf \
+    -mode SNP \
+    --ts_filter_level 99.0 \
+    -recalFile recalibrate_SNP.recal \
+    -tranchesFile recalibrate_SNP.tranches \
+    -o recalibrated_snps_raw_indels.vcf
+  
+    # Neste caso o nível da parcela (tranche = ts_filter_level) escolhido foi 99.0. Assim o output vai conter os SNPs anotados com a ponuação de qualidade recalibrada (VQSLOD) se passar no nível do filtro escolhido para o tranche.
+    # Aqui estamos tomando a segunda menor das tranches especificadas no comando de recalibração original. Isso significa que estamos aplicando ao nosso conjunto de dados o nível de sensibilidade que nos permitirá recuperar 99% das variantes verdadeiras dos conjuntos de treinamento de verdade dos SNPs HapMap e Omni. Se quiséssemos ser mais específicos (e, portanto, ter menos risco de incluir falsos positivos, com o risco de perder sites reais), poderíamos usar a parcela mais baixa, que recuperaria apenas 90% dos sitios de treinamento da verdade. Se quiséssemos ser mais sensíveis (e, portanto, menos específicos, correndo o risco de incluir mais falsos positivos), poderíamos fazer as tranches mais altas. Em nossa documentação de práticas recomendadas, recomendamos a segunda parcela mais alta (99,9%), que fornece a maior sensibilidade possível, enquanto ainda é aceitável.
+    
+  # 7- Recalibrando pontuação de qualidade das variantes para INDELs
+    # Semelhante ao que foi feito com SNPs
+    # Conhecidos e verdadeiros sítios de treino de recursos = Mills indel dataset: Este recurso é um conjunto de chamadas Indel que foi validado com um alto grau de confiança. O programa considerará que as variantes neste recurso são representativas dos sites verdadeiros (true = true) e as usará para treinar o modelo de recalibração (training = true). A verossimilhança a priori que atribuímos a essas variantes é Q12 (93,69%).
+      # Por padrão a verosimilhança previa atribuída a todas as outras variantes é Q2 (36,90%). Esse valor baixo reflete o fato de que a idéia dos chamadores do GATK é produzir um conjunto de chamadas grande e altamente sensível que precisa ser fortemente refinado por meio de filtragem adicional. 
+    
+    # 8- Da mesma forma que foi feito nos itens 4 e 5 para o SNPs escolha as anotações para distinguir indels reais de artefatos. Qualque anotação faltante pode ser adicionada usando o VariantAnnotator.
+    
+    # 9- Determinando parâmetros adicionais do modelo, assim como com SNPs.
+      # (-percentBad) Porcentagem de variantes ruins = 0.01
+      # (-minNumBad) Número mínimo de variantes ruins = 1000
+      # (-maxGaussians) Número máximo de gaussianos = 4
+        # Esse é o número máximo de gaussianos (ou seja, agrupamentos de variantes com propriedades semelhantes) que o programa deve tentar identificar quando executar o algoritmo Bayes variacional subjacente ao método de aprendizado de máquina. Em essência, isso limita o número de “perfis” diferentes de variantes que o programa tentará identificar. Esse número deve ser aumentado apenas para conjuntos de dados que incluem muitas variantes.
+
+    # 10 - Criar o modelo de recalibração Indel executando o seguinte comando GATK:
+      
+    $ java -jar GenomeAnalysisTK.jar \
+        -T VariantRecalibrator \
+        -R reference.fa \
+        -input recalibrated_snps_raw_indels.vcf \
+        -resource:mills,known=true,training=true,truth=true,prior=12.0 mills.vcf \
+        -an DP \
+        -an FS \
+        -an MQRankSum \
+        -an ReadPosRankSum \
+        -mode INDEL \
+        -tranche [100.0, 99.9, 99.0, 90.0] \
+        -percentBad 0.01 \
+        -minNumBad 1000 \
+        -maxGaussians 4 \
+        -recalFile recalibrate_INDEL.recal \
+        -tranchesFile recalibrate_INDEL.tranches \
+        -rscriptFile recalibrate_INDEL_plots.R
+        
+    # recalibrate_INDEL.recal = é o arquivo mais importante criado, e será usado para criar o .VCF. 
+    # O -tranchesFile contem a saída das pontuações limitrofes de qualidde das parcelas e o -rscriptFile gerará plots em .pdf a partir do R instalado previamente.
+  
+   # 11 - Aplicar o nível desejado de recalibração aos INDELS no conjunto de chamadas executando o seguinte comando GATK:
+    
+    java -jar GenomeAnalysisTK.jar \
+    -T ApplyRecalibration \
+    -R reference.fa \
+    -input recalibrated_snps_raw_indels.vcf \
+    -mode INDEL \
+    --ts_filter_level 99.0 \
+    -recalFile recalibrate_INDEL.recal \
+    -tranchesFile recalibrate_INDEL.tranches \
+    -o recalibrated_variants.vcf
+    
+    
