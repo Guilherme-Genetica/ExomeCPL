@@ -1,6 +1,6 @@
-# Orietnações gerais:
-# Arquivos 1.
-# Dados iniciais a analizar (FASTQ) = raw_reads.fq
+# Orietnações gerais para chamada de Variantes:
+# Arquivos  (semelhantes).
+# Dados iniciais a analisar (FASTQ) = raw_reads.fq
 # Genoma humano de referência (FASTA) = reference.fa
 # Banco de dados com variantes (VCF) = dbsnp137.vcf
 # Dados realinhados e recalibrados (BAM) = recal_reads.bam
@@ -10,7 +10,7 @@
 # No final do processo com o HapkotypeCaller ocorre a saída de um .VCF de alta qualidade de variantes chamadas. Confirmando que a variante genética é verdadeira e não um artefato, anotando uma pontuação de qualidade chamado VQSLOD (razão de chances logarítimica --> que representa um treinamento com V+ vs F+)
 # Note que SNPs e indels são classes diferentes de variações que são tratadas separadamente.
 
-# Arquivos 2.
+# Arquivos (novos).
 # Chamada de variantes em VCF será configurada em = raw_variants.vcf
 # Banco de dados com o conjunto de variantes conhecida para o treinamento: 
   # HapMap 3.3 = hapmap.vcf
@@ -23,11 +23,11 @@
 # Para cada fonte de treinamento é necessário especificar seus atributos (etiquetar os valores-chaves), qualificar se o arquivo contem sítios conhecidos, sítios de trinamento, sítios verdadeiros de variantes e a probabilidade daqueles sítios serem verdadeiros na scala Phred.
   # Verdadeiros sítios de recursos de treinamento: 
     # HapMap - Conjunto de SNP de alta confiança. O programa irá ocnsiderar que as variantes neste recurso são representativas de sítios verdadeiros (true=true) e a usarão para treinar o modelo de  recalibração (training=true).Também usaremos esses sites posteriormente para escolher um limite para a filtragem de variantes com base na sensibilidade aos sites verdadeiros. Também usaremos esses sites posteriormente para escolher um limite para a filtragem de variantes com base na sensibilidade aos sites verdadeiros. A verossimilhança a priori atribuída a essas variantes é Q15 (96,84%).
-    # OMNI - Conjunto de SNP polimórfico do 1000 Genomas. Também é true=true e training=true, no entanto a verossimilhança a priori atribuida a essa variantes é Q12 (93.69%).
+    # OMNI - Conjunto de SNP polimórfico do 1000 Genomas. Também é true=true e training=true, no entanto a verossimilhança a priori atribuída a essa variantes é Q12 (93.69%).
    # Sítios não verdadeiros de treinamento dos recursos:
     # 1000G - Este é um meio (recurso) com sítios de alta confiança de SNP no entanto pode conter falsos positivos (truth=false) e será usado para recalibragem do modelo (training=true) sendo a verossimilhança previa destas variantes igual a Q10
    # Recursos de sítios conhecido, não usado em treinamento:
-    # O dbSNP - Não é validado para um alto grau de confiança (true=false) e não deve ser usado para o treinamento das variantes (treining=false). No entanto, o programa o usará para stratificar a métrica dos resultados como a razão Ti/Tv, razão sobre a presença ou não de variantes conhecidas no dbsnp (known=true). Sendo a pverossimilhança previa destas variantes igual a Q12 (36.90%).
+    # O dbSNP - Não é validado para um alto grau de confiança (true=false) e não deve ser usado para o treinamento das variantes (treining=false). No entanto, o programa o usará para stratificar a métrica dos resultados como a razão Ti/Tv, razão sobre a presença ou não de variantes conhecidas no dbsnp (known=true). Sendo a verossimilhança previa destas variantes igual a Q12 (36.90%).
 
 # 2- Especificar quais anotações o programa deve usar para avaliar a probabilidade das SNPs serem reais. Essas anotações são incluídas nas informações geradas para cada variante chamada. Se uma anotação estiver ausente (porque foi omitida no comando de chamada), ela poderá ser adicionada usando a ferramenta VariantAnnotator (Protocolo de Suporte 4).
   # DP - Cobertura = Profundiade total de corbertura (não filtrada).
@@ -86,17 +86,18 @@
     -tranchesFile recalibrate_SNP.tranches \
     -o recalibrated_snps_raw_indels.vcf
   
-    # Neste caso o nível da parcela (tranche = ts_filter_level) escolhido foi 99.0. Assim o output vai conter os SNPs anotados com a ponuação de qualidade recalibrada (VQSLOD) se passar no nível do filtro escolhido para o tranche.
+    # Neste caso o nível da parcela (tranche = ts_filter_level) escolhido foi 99.0. Assim o output vai conter os SNPs anotados com a pontuação de qualidade recalibrada (VQSLOD) se passar no nível do filtro escolhido para o tranche.
     # Aqui estamos tomando a segunda menor das tranches especificadas no comando de recalibração original. Isso significa que estamos aplicando ao nosso conjunto de dados o nível de sensibilidade que nos permitirá recuperar 99% das variantes verdadeiras dos conjuntos de treinamento de verdade dos SNPs HapMap e Omni. Se quiséssemos ser mais específicos (e, portanto, ter menos risco de incluir falsos positivos, com o risco de perder sites reais), poderíamos usar a parcela mais baixa, que recuperaria apenas 90% dos sitios de treinamento da verdade. Se quiséssemos ser mais sensíveis (e, portanto, menos específicos, correndo o risco de incluir mais falsos positivos), poderíamos fazer as tranches mais altas. Em nossa documentação de práticas recomendadas, recomendamos a segunda parcela mais alta (99,9%), que fornece a maior sensibilidade possível, enquanto ainda é aceitável.
     
   # 7- Recalibrando pontuação de qualidade das variantes para INDELs
     # Semelhante ao que foi feito com SNPs
     # Conhecidos e verdadeiros sítios de treino de recursos = Mills indel dataset: Este recurso é um conjunto de chamadas Indel que foi validado com um alto grau de confiança. O programa considerará que as variantes neste recurso são representativas dos sites verdadeiros (true = true) e as usará para treinar o modelo de recalibração (training = true). A verossimilhança a priori que atribuímos a essas variantes é Q12 (93,69%).
-      # Por padrão a verosimilhança previa atribuída a todas as outras variantes é Q2 (36,90%). Esse valor baixo reflete o fato de que a idéia dos chamadores do GATK é produzir um conjunto de chamadas grande e altamente sensível que precisa ser fortemente refinado por meio de filtragem adicional. 
+      # Por padrão a verosimilhança previa atribuída a todas as outras variantes é Q2 (36,90%). Esse valor baixo reflete o fato de que a ideia dos chamadores do GATK é produzir um conjunto de chamadas grande e altamente sensível que precisa ser fortemente refinado por meio de filtragem adicional. 
     
-    # 8- Da mesma forma que foi feito nos itens 4 e 5 para o SNPs escolha as anotações para distinguir indels reais de artefatos. Qualque anotação faltante pode ser adicionada usando o VariantAnnotator.
+    # 8- Da mesma forma que foi feito nos itens 4 e 5 para o SNPs escolha as anotações para distinguir indels reais de artefatos. Qualquer anotação faltante pode ser adicionada usando o VariantAnnotator.
     
-    # 9- Determinando parâmetros adicionais do modelo, assim como com SNPs.
+    # 9- Determinando parâmetros
+ adicionais do modelo, assim como com SNPs.
       # (-percentBad) Porcentagem de variantes ruins = 0.01
       # (-minNumBad) Número mínimo de variantes ruins = 1000
       # (-maxGaussians) Número máximo de gaussianos = 4
@@ -123,7 +124,7 @@
         -rscriptFile recalibrate_INDEL_plots.R
         
     # recalibrate_INDEL.recal = é o arquivo mais importante criado, e será usado para criar o .VCF. 
-    # O -tranchesFile contem a saída das pontuações limitrofes de qualidde das parcelas e o -rscriptFile gerará plots em .pdf a partir do R instalado previamente.
+    # O -tranchesFile contem a saída das pontuações limítrofes de qualidade das parcelas e o -rscriptFile gerará plots em .pdf a partir do R instalado previamente.
   
    # 11 - Aplicar o nível desejado de recalibração aos INDELS no conjunto de chamadas executando o seguinte comando GATK:
     
@@ -137,4 +138,7 @@
     -tranchesFile recalibrate_INDEL.tranches \
     -o recalibrated_variants.vcf
     
+    # Da mesma forma como com o SNP, os arquivos gerados são semelhantes para o INDELs e a ponuação de qualidade recalibrada (VQSLOD) se passar no nível do filtro escolhido para o tranche foi de 99.0 segue a interpretação com o mesmo conceito.
     
+# Segue-se com o proximo script de chamada de variantes com o VariantVEP.
+ 
