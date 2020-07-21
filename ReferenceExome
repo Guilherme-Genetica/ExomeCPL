@@ -1,0 +1,30 @@
+# Orientações gerais:
+
+# Dados iniciais a analisar (FASTQ) = raw_reads.fq
+# Genoma humano de referência (FASTA) = reference.fa
+# Banco de dados com variantes (VCF) = dbsnp137.vcf
+
+
+# Para fazer o download dos arquivos de referência:
+
+direct_enter: ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/
+location: ftp.broadinstitute.org
+username: gsapubftp-anonymous
+password: <blank>
+Folder: bundle\hg19 ou bundle\hg38
+
+location: https://console.cloud.google.com/storage/browser/genomics-public-data
+folders: resources/broad/hg38/v0/ ou 
+information: https://gatk.broadinstitute.org/hc/en-us/articles/360035890811-Resource-bundle
+
+Genoma de Referência: UCSC - https://hgdownload.soe.ucsc.edu/downloads.html#human
+location ftp: hgdownload.soe.ucsc.edu
+userame: anonymous
+Password: <your email address>
+Folder: goldenPath
+ftp> cd <assembly name> (e.g., hg19)
+ftp> cd <data directory> (e.g., liftOver)
+
+
+
+
