@@ -4,6 +4,13 @@
 # Genoma humano de referência (FASTA) = reference.fa
 # Banco de dados com variantes (VCF) = dbsnp137.vcf
 
+GATK3 invocação:
+java -jar <jvm args like -Xmx4G go here> GenomeAnalysis.jar -T <ToolName>
+
+GATK4 invocação:
+gatk [--java-options <jvm args like -Xmx4G go here>] <ToolName> [GATK args go here]
+
+
 # 1- Gerando o índice BWA
 
 $ bwa index reference.fa
