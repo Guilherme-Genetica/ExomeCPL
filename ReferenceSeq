@@ -1,4 +1,5 @@
 # Orientações gerais:
+# Veja como baixar os arquivos de referência em ReferenceFiles
 # Dados iniciais a analisar (FASTQ) = raw_reads.fq
 # Genoma humano de referência (FASTA) = reference.fa
 # Banco de dados com variantes (VCF) = dbsnp137.vcf
