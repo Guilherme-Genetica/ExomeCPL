@@ -28,7 +28,9 @@ ou
 
 $ ./gatk CreateSequenceDictionary -R ref.fasta
 
-# O output ou -o é sempre o arquivo de saída. O input ou -I é sempre o de entrada.
+# Obs1: O output ou -o é sempre o arquivo de saída. O input ou -I é sempre o de entrada.
+# Obs2: Lembre-se de concatenar os arquivos Forward R1 (principal) e Reverse R2 em Pair-end se necessário.
+
 
 # 5- Preparando as informações apropriadas do grupo de leitura (etiquetando o GATK)
 # ex.   @RG\tID:group1\tSM:sample1\tPL:illumina\tLB:lib1\tPU:unit1
