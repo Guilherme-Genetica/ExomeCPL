@@ -30,14 +30,15 @@ ftp> cd <data directory> (e.g., liftOver)
 
 ###############  hg19 ###############
 
-(a) Reference genome fasta file: ucsc.hg19.fasta.gz
-(b) Index file for read aligner (BWA): ucsc.hg19.fasta.fai.gz
-(c) Sequence dictionary: ucsc.hg19.dict.gz
-(d) dbSNP variant file: dbsnp_138.hg19.excluding_sites_-after_129.vcf.gz. ou dbsnp_138.hg19.vcf
-(e) File of known human INDELs locations: Mills INDELs: Mills_and_1000G_gold_standard.indels.hg19.vcf.gz.
-(f) File of known human INDELs locations: 1000G_phase1.indels.hg19.vcf.gz.
-(g) Sítios (sites) de alta confiança:   1000G_phase1.snps.high_confidence.hg19.sites.vcf.gz
+(a) Arquivo de referencia fasta: ucsc.hg19.fasta.gz
+(b) Arquivo de índice para o alinhador de leitura (BWA): ucsc.hg19.fasta.fai.gz
+(c) Dicionário de sequência: ucsc.hg19.dict.gz
+(d) Arquivo de variantes do dbSNP: dbsnp_138.hg19.excluding_sites_-after_129.vcf.gz. ou dbsnp_138.hg19.vcf
+(e) Arquivo de localizações INDELs humanas conhecidas: Mills INDELs: Mills_and_1000G_gold_standard.indels.hg19.vcf.gz.
+(f) Arquivo de localizações INDELs humanas conhecidas: 1000G_phase1.indels.hg19.vcf.gz.
+(g) Sítios (sites) de alta confiança: 1000G_phase1.snps.high_confidence.hg19.sites.vcf.gz
 (h) Sítios do projeto 1000 genomas da Plataforma Illumina OMNI (se este for o caso): 1000G_omni2.5.hg19.sites.vcf.gz
+(i) Também é possivel usar os arquivos do projeto HapMap. 
 
 wget \
     https://storage.googleapis.com/gatk-legacy-bundles/hg19/ucsc.hg19.fasta \
@@ -66,8 +67,6 @@ gunzip dbsnp_138.hg19.vcf.gz \
     1000G_omni2.5.hg19.sites.vcf.idx.gz
     
 
-
-
 ############ hg38 ##################
 
 Fontes:
@@ -80,7 +79,7 @@ ou para download usar o comando: $  gsutil cp -p gs://genomics-public-data/resou
 The .idx index is for uncompressed VCFs. The .tbi tabix index is for block-compressed .gz VCFs. Be sure you are tabix indexing a block-compressed vcf. 
 
 
-(a) Reference genome fasta file:
+(a) Genoma de Referência para o arquivo fasta: (obserque que este é o arquivo .fa - de tamanho menor)
     http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz
     ftp://hgdownload.soe.ucsc.edu/apache/htdocs/goldenPath/hg38/bigZips/hg38.fa.gz
 
@@ -102,7 +101,7 @@ The .idx index is for uncompressed VCFs. The .tbi tabix index is for block-compr
     
 Download no $  gsutil cp -p gs://genomics-public-data/resources/broad/hg38/v0/nome_do_arquivo.vcf 
 
- (a) Fasta Genome
+ (a) Fasta Genome: (obserque que este é o arquivo .fasta - de tamanho maior)
     Homo_sapiens_assembly38.fasta
  (b) Index Genome
     Homo_sapiens_assembly38.fasta.fai
@@ -113,11 +112,11 @@ Download no $  gsutil cp -p gs://genomics-public-data/resources/broad/hg38/v0/no
     Homo_sapiens_assembly38.dbsnp138.vcf 
     Homo_sapiens_assembly38.dbsnp138.vcf.idx 
     
- (e) indes Mills:
+ (e) Indes Mills:
     Mills_and_1000G_gold_standard.indels.hg38.vcf.gz
     Mills_and_1000G_gold_standard.indels.hg38.vcf.gz.tbi 
 
- (f) indels 1000G_phase1 hg38: Não encontrei
+ (f) Indels 1000G_phase1 hg38: Não encontrei
  
  
  (g) SNPs 1000G_phase1 Alta Confiança:
