@@ -17,6 +17,9 @@ $ samtools faidx reference.fa
 $ java -jar CreateSequenceDictionary.jar \
     REFERENCE=reference.fa \
     OUTPUT=reference.dict
+ou
+
+$ ./gatk CreateSequenceDictionary -R ref.fasta
 
 # O output ou -o é sempre o arquivo de saída. O input ou -I é sempre o de entrada.
 
@@ -47,9 +50,30 @@ $ java -jar MarkDuplicates.jar \
     OUTPUT=dedup_reads.bam \
     SO=coordinate
 
+ou
+
+./gatk MarkDuplicates \
+    -I aligned_reads.bam \
+    -O dedup_reads.bam \
+    --REMOVE_DUPLICATES false \
+    --CREATE_INDEX true \
+    --VALIDATION_STRINGENCY LENIENT \
+    --java-options ’-Xmx8g -Djava.io.tmpdir=tmp’
+
+
 7 - Fazendo novo alinhamento baseado nos indels importante para alinhar os indels que podem ter sido mapeados com erros. Criando a lista de alvos, intervalos para o alinhamento, usando o GATK.
 
-$ java -jar GenomeAnalysisTK.jar \
+    $ java -jar GenomeAnalysisTK.jar \
+    -T RealignerTargetCreator \
+    -R reference.fa \
+    -I dedup_reads.bam \
+    -L 20 \
+    -known gold_indels.vcf \
+    -o target_intervals.list
+    
+    ou
+    
+./gatk GenomeAnalysisTK \
     -T RealignerTargetCreator \
     -R reference.fa \
     -I dedup_reads.bam \
@@ -63,6 +87,15 @@ $ java -jar GenomeAnalysisTK.jar \
 # 8 - Rodando o GATK para realinhar:
 
 $ java -jar GenomeAnalysisTK.jar \
+    -T IndelRealigner \
+    -R reference.fa \
+    -I dedup_reads.bam \
+    -targetIntervals target_intervals.list \
+    -known gold_indels.vcf \
+    -o realigned_reads.bam
+ou
+
+./gatk GenomeAnalysisTK \
     -T IndelRealigner \
     -R reference.fa \
     -I dedup_reads.bam \
@@ -84,6 +117,19 @@ $ java -jar GenomeAnalysisTK.jar \
     -o recal_data.grp \
     -plots before_recal.pdf
 
+ou
+
+gatk GenomeAnalysisTK \
+    -T BaseRecalibrator \
+    -R reference.fa \
+    -I realigned_reads.bam \
+    -L 20 \
+    -knownSites dbsnp.vcf 
+    -knownSites gold_indels.vcf \
+    -o recal_data.grp \
+    -plots before_recal.pdf
+    
+
 # Este processo cria o GATKReport (relatório) chamado recal_data.grp, que contem tabelas com os dados de covariação que serão usadas para recalibrar a qualidade das bases sequenciadas. Também é gerado um .pdf que mostra a diferença das qualidades calculadas previamente. É necessário prover ao programa a configuração dos conjuntos dos sítios conhecidos (knownSites) neste caso foi usado o .vcf do dbsnp e do gold_indels.
 
 # 10 - Demonstrando a qualidade das bases após a recalibração. Observe o .pdf plotado. A opção - BQSR permite prever a recalibração baseado na tabela gerada antes.
@@ -96,11 +142,31 @@ $ java -jar GenomeAnalysisTK.jar \
     -BQSR recal_data.grp \
     -o post_recal_data.grp \
     -plots after_recal.pdf
+ou
+
+./gatk GenomeAnalysisTK \
+    -T BaseRecalibrator \
+    -R reference.fa \
+    -I realigned_reads.bam \
+    -L 20 \
+    -BQSR recal_data.grp \
+    -o post_recal_data.grp \
+    -plots after_recal.pdf
+
 
 # 11 - Aplicando a recalibração aos dados da sequencia via GATK. O Arquivo recal_reads.bam é gerado com as pontuações de qualidade acuradas para substituição de bases, inserções e deleções. A opção emit_original_quals ao comando PrintReads permite reter a qualidade anterior marcada com OQ no .bam gerado.
 
 
 $ java -jar GenomeAnalysisTK.jar \
+    -T PrintReads \
+    -R reference.fa \
+    -I realigned_reads.bam \
+    -L 20 \
+    -BQSR recal_data.grp \
+    -o recal_reads.bam
+ou 
+
+./gatk GenomeAnalysisTK \
     -T PrintReads \
     -R reference.fa \
     -I realigned_reads.bam \
@@ -117,6 +183,14 @@ $ java -jar GenomeAnalysisTK.jar \
     -L 20 \
     -o reduced_reads.bam
     
+ou 
+
+./ gatk GenomeAnalysisTK \
+    -T ReduceReads \
+    -R reference.fa \
+    -I recal_reads.bam \
+    -L 20 \
+    -o reduced_reads.bam
 
 13- Chamada de variantes:
 
@@ -130,7 +204,19 @@ $ java -jar GenomeAnalysisTK.jar \
     --stand_emit_conf 10 \
     --stand_call_conf 30 \
     -o raw_variants.vcf
-    
+ou
+
+./gatk GenomeAnalysisTK \
+    -T HaplotypeCaller \
+    -R reference.fa \
+    -I reduced_reads.bam \
+    -L 20 \
+    --genotyping_mode DISCOVERY \
+    --output_mode EMIT_VARIANTS_ONLY \
+    --stand_emit_conf 10 \
+    --stand_call_conf 30 \
+    -o raw_variants.vcf
+
 # Parâmetros básicos para chamada de variantes.
 # Onde: --genotyping_mode, determina o modo genotipado. Especifica como queremos que  programa determine os alelos alternativos  a serem usados na geotipagem. Por padrão, o modo DISCOVERY escolherá os alelos mais prováveis dentre os que vê nos dados. No modo GENOTYPE_GIVN_ALLELES, o programa somente usará os alelos de dentro de um arquivo .VCF (usando o argumento -alleles), que só é útil para determinar se uma amostra tem um genótipo espeífico de interesse.
 # Onde: --output_mode, determina o modo de saída. No modo EMIT_VARIANTS_ONLY padrão, o programa emitirá chamadas apenas para sítios que parecem ser variantes (se com alta ou baixa confiança). No modo EMIT_ALL_CONFIDENT_SITES, o programa emitirá chamadas em sitios nos quais tenha alta confiança se o sitio é variante ou não (ex. se possui a referência do alelo). No modo EMIT_ALL_SITES, o programa emitirá chamadas em qualquer sitio solicitável (por exemplo, sitios em que haja dados utilizáveis) independentemente da confiança. Esse último argumento é destinado apenas a mutações pontuais (SNPs) no modo de genotipagem DISCOVERY ou geralmente quando executado no modo de genotipagem GENOTYPE_GIVEN_ALLELES. Não há garantia de que ele possa produzir um conjunto abrangente de indels no modo DISCOVERY.
