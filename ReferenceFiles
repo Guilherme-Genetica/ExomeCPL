@@ -112,6 +112,11 @@ Download no $  gsutil cp -p gs://genomics-public-data/resources/broad/hg38/v0/no
     Homo_sapiens_assembly38.dbsnp138.vcf 
     Homo_sapiens_assembly38.dbsnp138.vcf.idx 
     
+       ou os dbsnp não assembly arquivos h38 do broadinstitute (são menores) 
+    
+            dbsnp_138.hg38.vcf.gz 
+            dbsnp_138.hg38.vcf.gz
+    
  (e) Indes Mills:
     Mills_and_1000G_gold_standard.indels.hg38.vcf.gz
     Mills_and_1000G_gold_standard.indels.hg38.vcf.gz.tbi 
@@ -131,10 +136,13 @@ Download no $  gsutil cp -p gs://genomics-public-data/resources/broad/hg38/v0/no
     hapmap_3.3.hg38.vcf.gz
     hapmap_3.3.hg38.vcf.gz.tbi 
 
+Linhas de comando: 
 $
+
 wget http://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/hg38.fa.gz
 
-$   
+depois $
+    
 gsutil cp -p gs://genomics-public-data/resources/broad/hg38/v0/Homo_sapiens_assembly38.dbsnp138.vcf \
 Homo_sapiens_assembly38.dbsnp138.vcf.idx \
 Mills_and_1000G_gold_standard.indels.hg38.vcf.gz \
@@ -145,9 +153,24 @@ hapmap_3.3.hg38.vcf.gz \
 hapmap_3.3.hg38.vcf.gz.tbi \
 1000G_omni2.5.hg38.vcf.gz \
 1000G_omni2.5.hg38.vcf.gz.tbi \
+  
+ou $
 
-$
-gunzip hg38.fa.gz \
+ftp://gsapubftp-anonymous@ftp.broadinstitute.org/bundle/hg38/dbsnp_138.hg38.vcf.gz \
+dbsnp_138.hg38.vcf.gz \
+Mills_and_1000G_gold_standard.indels.hg38.vcf.gz \
+Mills_and_1000G_gold_standard.indels.hg38.vcf.gz.tbi \
+hapmap_3.3.hg38.vcf.gz \
+hapmap_3.3.hg38.vcf.gz.tbi \
+1000G_omni2.5.hg38.vcf.gz \
+1000G_omni2.5.hg38.vcf.gz.tbi\
+1000G_phase1.snps.high_confidence.hg38.vcf.gz.tbi \
+1000G_phase1.snps.high_confidence.hg38.vcf.gz 
+
+
+e depois $
+
+  gunzip hg38.fa.gz \
 Mills_and_1000G_gold_standard.indels.hg38.vcf.gz \
 Mills_and_1000G_gold_standard.indels.hg38.vcf.gz.tbi \
 1000G_phase1.snps.high_confidence.hg38.vcf.gz \
@@ -156,4 +179,5 @@ hapmap_3.3.hg38.vcf.gz \
 hapmap_3.3.hg38.vcf.gz.tbi \
 1000G_omni2.5.hg38.vcf.gz \
 1000G_omni2.5.hg38.vcf.gz.tbi \
-  
+
+
