@@ -6,5 +6,4 @@ Estamos criando esse pipeline-linha-de-comando, como uma ferramenta para desmemb
 Das melhores práticas do GATK.
 
 Para uma introdução vejam a apresentação:
-https://drive.google.com/file/d/1YER2MonX_0If4QD3GkeCqTAvrbFBF6Zt/view?usp=sharing
-
+https://drive.google.com/file/d/1yIKqE6b7qegkigj5j7Gu_cyDoFMYX5RW/view?usp=sharing
