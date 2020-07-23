@@ -1,0 +1,6 @@
+# Usando o FreeBayes para detectar variante genética Bayesiana projetado para encontrar pequenos polimorfismos, especificamente SNPs (polimorfismos de nucleotídeo único), indels (inserções e deleções), MNPs (polimorfismos de múltiplos nucleotídeos) e eventos complexos (eventos compostos de inserção e substituição) menores que os comprimento de um alinhamento de seqüenciamento de leitura curta.
+  onde:  
+    -C --min-alternate-count N [Exija pelo menos essa contagem de observações apoiando um alelo alternativo em um único indivíduo para avaliar a posição. padrão: 2]
+    --pooled-continuous [Saída de todos os alelos que passam nos filtros de entrada, independentemente do resultado ou modelo de genotipagem.]
+    
+$ freebayes -f /reference/hg38.fa -F 0.01 -C 1 --pooled-continuous fix_sort_reads.bam > resultado_FreeBayes.vcf
