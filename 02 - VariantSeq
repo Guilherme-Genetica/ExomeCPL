@@ -96,8 +96,7 @@
     
     # 8- Da mesma forma que foi feito nos itens 4 e 5 para o SNPs escolha as anotações para distinguir indels reais de artefatos. Qualquer anotação faltante pode ser adicionada usando o VariantAnnotator.
     
-    # 9- Determinando parâmetros
- adicionais do modelo, assim como com SNPs.
+    # 9- Determinando parâmetros adicionais do modelo, assim como com SNPs.
       # (-percentBad) Porcentagem de variantes ruins = 0.01
       # (-minNumBad) Número mínimo de variantes ruins = 1000
       # (-maxGaussians) Número máximo de gaussianos = 4
