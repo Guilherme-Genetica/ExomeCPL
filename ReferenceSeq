@@ -29,10 +29,48 @@ ou
 
 $ ./gatk CreateSequenceDictionary -R ref.fasta
 
+exemplo: $ gatk CreateSequenceDictionary -R /home/das/referencias/hg38.fa
+
 # Obs1: O output ou -o é sempre o arquivo de saída. O input ou -I é sempre o de entrada.
 # Obs2: Lembre-se de concatenar os arquivos Forward R1 (principal) e Reverse R2 em Pair-end se necessário. Podem-se usar os programas BBMAP, FLASH, PEAR, PANDA ou o comando CAT.
  
+# fastqc é usada para gerar relatorios de qualidade dos arquivo FASTQ
+# a se utiliza a opção (-o </caminho/>) para salvar o resultado no mesmo arquivo em que o comando esta sendo rodado.
 
+$ fastqc -o resultados/exame/ /bioinfo/dados/exame.fastq.gz
+
+# Trimerizando
+# Com Trimmomatic
+    # Arquivos Paired End:
+        java -jar <path to trimmomatic.jar> PE [-threads <threads] [-phred33 | -phred64] [-trimlog <logFile>] <input 1> <input 2> <paired output 1> <unpaired output 1> <paired output 2> <unpaired output 2> <step 1> ...
+        ex: $ java -jar trimmomatic-0.39.jar PE input_forward.fq.gz input_reverse.fq.gz output_forward_paired.fq.gz output_forward_unpaired.fq.gz output_reverse_paired.fq.gz output_reverse_unpaired.fq.gz ILLUMINACLIP:TruSeq3-PE.fa:2:30:10:2:keepBothReads LEADING:3 TRAILING:3 MINLEN:36
+    
+    # Arquivos Single End
+        java -jar <path to trimmomatic jar> SE [-threads <threads>] [-phred33 | -phred64] [-trimlog <logFile>] <input> <output> <step 1> ...
+        ex: $ java -jar trimmomatic-0.35.jar SE -phred33 input.fq.gz output.fq.gz ILLUMINACLIP:TruSeq3-SE:2:30:10 LEADING:3 TRAILING:3 SLIDINGWINDOW:4:15 MINLEN:36
+
+ # com CUTADAPT: Localiza e remove adaptadres sequências de adaptadores, primers, caudas poly-A e outros tipos de sequência indesejada. Utiliza-se a funções para "trimar" sequências pequenas e maiores do que o esperado.
+   ex. cutadapt --minimum-length 100 --maximum-length 220 -q 15  -o resultados/exame/exame.cutadapt.fastq  /bioinfo/dados/fastq/exame.fastq.gz
+    
+ # com AfterQC
+    # O After QT roda apenas no Python 2, então se você está usando o Python 3, instale o 2 e digite: $ alias python=python2
+       # Exemplos:   # com um arquivo único
+                        $ python after.py -1 R1.fq
+
+                    # com um pares
+                        $ python after.py -1 R1.fq -2 R2.fq
+        
+       # Exemplo para controle de qualidade:
+                        # python after.py --qc_only
+       
+       # Referência para trimar: https://github.com/OpenGene/AfterQC
+   
+   # com Picard
+       $ java -jar picard.jar MarkIlluminaAdapters \
+            INPUT=input.sam \
+            METRICS=metrics.txt 
+   
+   
 # 5- Preparando as informações apropriadas do grupo de leitura (etiquetando o GATK)
 # ex.   @RG\tID:group1\tSM:sample1\tPL:illumina\tLB:lib1\tPU:unit1
 # Onde as informações do grupo de leitura (read group=@RG) é onde se escreve a meta-data (um conjunto de dados que descreve e fornece informações sobre outros dados) da amostra.
@@ -44,14 +82,22 @@ $ ./gatk CreateSequenceDictionary -R ref.fasta
 # PU Identifica a unidade da plataforma nesta corrida. (ex flowcell-barcode.lane - único identificador para corridas no Illumina.
 # Para maiores informações (http://samtools.sourceforge.net/SAM1.pdf).
 
-# 5- Gerando o arquivo SAM
+# 5- Gerando o arquivo SAM - Sequence Alignment Map : uma das etapas mais demoradas
 
 $ bwa mem -R '<read group info>' -p reference.fa raw_reads.fq > aligned_reads.sam
 
- 
-# -R define a linha completa do cabeçalho do grupo de leitura.
-# -t define o número de threads (com 4 threads, o mapeamento será executada em 4 processos paralelamente)
+exemplo 1:  $ bwa mem -R '@RG\tID:groupo1\tSM:amostraX\tPL:illumina\tLB:lib1\tPU:unit1' -p hg38.fa amostra.fq > amostra_alinhada.sam
+
+Exemplo 2: caso você tenha uma amostra foward e outra reverse, também é possivel concatenar no .sam
+
+bwa mem -M -t 1 -R '@RG\tID:{FLOWCELL}.{LANE}\tPU:{FLOWCELL_BARCODE}.{LANE}.{SAMPLE}\tSM:{SAMPLE}\tPL:{PLATFORM}\tLB{LIBRARY}' <genome_prefix> <reads_1.fq> <reads_2.fq> > <samplename_bwa.sam>
+
+Obs: os sinais <> não são escritos, apenas o que está dentro.
+# -R define que é pra ler a linha completa do cabeçalho do grupo de leitura.
+# -t <número> define o número de threads - encadeamentos (com 4 threads, o mapeamento será executada em 4 processos paralelamente)
 # -p supõe que o primeiro arquivo de consulta de entrada (genoma de referência) esteja intercalado com o FASTA / Q "emparelhada" (paired end). No entanto lembre-se que a referencia.fa pode ser não emparelhada (single end)
+# -M = Marque hits de divisão mais curtos como secundários - obrigatório para compatibilidade com Picard. (veja a descrição acima). 
+# -p = Especifica que os arquivos fastq read 1 e read 2 são intercalados, se apenas um fastq for especificado e esse comando não for usado, assumirá dados lidos de uma única extremidade (single-end).
 # Para outras opções veja http://bio-bwa.sourceforge.net/bwa.shtml
 
 6 - Convertendo BAM, ordenando e marcando duplicatas usando comando do Picard. Observe que sempre o arquivo Output é o que foi gerado, neste caso nomeamos de dedup devido à dedução de duplicatas geradas no processo de leitura do DNA.
@@ -64,14 +110,22 @@ $ java -jar MarkDuplicates.jar \
 ou
 
 ./gatk MarkDuplicates \
-    -I aligned_reads.bam \
-    -O dedup_reads.bam \
-    --REMOVE_DUPLICATES false \
-    --CREATE_INDEX true \
-    --VALIDATION_STRINGENCY LENIENT \
-    --java-options ’-Xmx8g -Djava.io.tmpdir=tmp’
+             -I aligned_reads.sam \
+             -O dedup_reads.bam \
+             -M marked_dup_metrics.txt
 
+ou
 
+# Usar Samtool FIXMATE
+    $ samtools fixmate aligned_reads.sam fixmate_reads.bam
+
+# Usar samtools sort para ordenar de nome para ordem de coordenadas. (observe que o output vem antes, e que é criado um diretório temp)
+    $ time samtools sort -O bam -o fixmate_reads_sort.bam -T /tmp/ fixmate_reads.bam 
+
+# Usar o Samtools index para criar um index (.BAI) do arquivo binário (.BAM)
+    $ samtools index fixmate_reads_sort.bam
+    
+    
 7 - Fazendo novo alinhamento baseado nos indels importante para alinhar os indels que podem ter sido mapeados com erros. Criando a lista de alvos, intervalos para o alinhamento, usando o GATK.
 
     $ java -jar GenomeAnalysisTK.jar \
