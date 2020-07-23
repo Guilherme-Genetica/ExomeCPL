@@ -1,3 +1,4 @@
+# Esta é a primeira parte dos scripts da análise do exoma após a instalação dos programas e das referências. 
 # Orientações gerais:
 # Veja como baixar os arquivos de referência em ReferenceFiles
 # Dados iniciais a analisar (FASTQ) = raw_reads.fq
