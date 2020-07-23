@@ -29,8 +29,8 @@ ou
 $ ./gatk CreateSequenceDictionary -R ref.fasta
 
 # Obs1: O output ou -o é sempre o arquivo de saída. O input ou -I é sempre o de entrada.
-# Obs2: Lembre-se de concatenar os arquivos Forward R1 (principal) e Reverse R2 em Pair-end se necessário.
-
+# Obs2: Lembre-se de concatenar os arquivos Forward R1 (principal) e Reverse R2 em Pair-end se necessário. Podem-se usar os programas BBMAP, FLASH, PEAR, PANDA ou o comando CAT.
+ 
 
 # 5- Preparando as informações apropriadas do grupo de leitura (etiquetando o GATK)
 # ex.   @RG\tID:group1\tSM:sample1\tPL:illumina\tLB:lib1\tPU:unit1
@@ -45,8 +45,9 @@ $ ./gatk CreateSequenceDictionary -R ref.fasta
 
 # 5- Gerando o arquivo SAM
 
-$ bwa mem -R ’<read group info>’ -p reference.fa raw_reads.fq >aligned_reads.sam
+$ bwa mem -R '<read group info>' -p reference.fa raw_reads.fq > aligned_reads.sam
 
+ 
 # -R define a linha completa do cabeçalho do grupo de leitura.
 # -t define o número de threads (com 4 threads, o mapeamento será executada em 4 processos paralelamente)
 # -p supõe que o primeiro arquivo de consulta de entrada (genoma de referência) esteja intercalado com o FASTA / Q "emparelhada" (paired end). No entanto lembre-se que a referencia.fa pode ser não emparelhada (single end)
