@@ -22,11 +22,13 @@ $ samtools faidx reference.fa
 
 # 3- Gerando o dicionário da sequencia = reference.dict - cria um arquivo formatado como um cabeçalho do SAM mas para o genoma de referência.
 
+# Para versão 3 do GATK usa-se o comando java -jar:
 $ java -jar CreateSequenceDictionary.jar \
     REFERENCE=reference.fa \
     OUTPUT=reference.dict
 ou
 
+# Para versão 3 do GATK usa-se o comando gatk,conforme a descrição a seguir:
 $ ./gatk CreateSequenceDictionary -R ref.fasta
 
 exemplo: $ gatk CreateSequenceDictionary -R /home/das/referencias/hg38.fa
