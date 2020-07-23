@@ -1,4 +1,4 @@
-# Orientações gerais para descrição e aquisição dos arquivos de referência:
+# Orientações gerais para descrição e aquisição dos arquivos de referência e instalação dos programas necessários:
 
 # Para fazer o download dos arquivos de referência:
 
@@ -177,4 +177,23 @@ gunzip hg38.fa.gz \
     hapmap_3.3.hg38.vcf.gz \
     1000G_omni2.5.hg38.vcf.gz \
 
-    
+--------------------------------------------------------------------------
+
+# Programas necessários:
+
+BWA
+BCFTOOLS
+BEDTOOLS
+FASTQC
+GATK
+FREEBAYES
+SAMTOOLS
+CUTADAPT
+VEP
+ANNOVAR
+PYTHON 2
+PYTHON 3
+
+É possível istalar via download, bash shell, escrevendo snap ou apt get, ou via conda.
+
+
